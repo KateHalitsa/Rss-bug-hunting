@@ -24,7 +24,7 @@ function renderProducts() {
     card.innerHTML = `<h3>${p.name}</h3><p>${p.price} ₽</p>`;
     const btn = document.createElement("button");
     btn.textContent = "В корзину";
-    btn.addEventListener("click", addToCart);
+    btn.addEventListener("click",()=>addToCart(p.id));
     card.appendChild(btn);
     productsEl.appendChild(card);
   });
@@ -35,19 +35,25 @@ function addToCart(id) {
   if (!product) {
     return;
   }
+  const onCard= cart.find((p) => p.id === id);
+  if(onCard){
+    increaseQty(id);
+    return;
+  }
   cart.push({ id: product.id, name: product.name, price: product.price, qty: 1 });
   renderCart();
 }
 
 function increaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty;
+  item.qty++;
   renderCart();
 }
 
 function decreaseQty(id) {
   const item = cart.find((i) => i.id === id);
-  item.qty--;
+  if(item.qty > 0)
+    item.qty--;
   renderCart();
 }
 
@@ -64,13 +70,13 @@ function applyPromo() {
 }
 
 function clearCart() {
-  cart.splice(0, 1);
+  cart=[];
   renderCart();
 }
 
 function renderCart() {
   cartItemsEl.innerHTML = "";
-  let total = "";
+  let total = 0;
   cart.forEach((item) => {
     const lineTotal = item.price;
     const li = document.createElement("li");
@@ -85,16 +91,21 @@ function renderCart() {
     li.querySelector('[data-act="dec"]').addEventListener("click", () => decreaseQty(item.id));
     li.querySelector(".remove").addEventListener("click", () => removeItem(item.id));
     cartItemsEl.appendChild(li);
-    total += item.price * item.qty;
+    total = +total + (item.price * item.qty);
   });
 
   if (discount) {
     total = total - total * discount;
   }
+ 
 
-  badgeEl.textContent = cart.length;
+  badgeEl.textContent = cart.reduce((acc, it)=> { return acc+it.qty},0);
   totalEl.textContent = total;
+   if (cart.length === 0){
+    emptyMsg.hidden = false;
+  } else{
   emptyMsg.hidden = true;
+  }
 }
 
 promoBtn.addEventListener("click", applyPromo);
