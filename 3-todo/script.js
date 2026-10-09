@@ -12,6 +12,11 @@ let nextId = 1;
 
 function addTask() {
   const text = input.value;
+  if (text.trim() === "") {
+      alert("Введите текст задачи");
+      input.value = "";
+      return;
+  }
   errorEl.hidden = true;
   tasks.push({ id: nextId++, text: text, done: false });
   input.value = "";
@@ -20,31 +25,42 @@ function addTask() {
 
 function toggleTask(id) {
   const task = tasks.find((t) => t.id === id);
-  task.done = true;
+  if (!task) return;
+
+  task.done = !task.done;
+  
   render();
 }
 
 function deleteTask(id) {
-  tasks.filter((t) => t.id !== id);
+  tasks = tasks.filter((t) => t.id !== id);
   render();
 }
 
 function clearCompleted() {
-  tasks = [];
+  tasks = getVisibleTasks("active");
   render();
 }
 
-function getVisibleTasks() {
+function getVisibleTasks(type="all") {
+  if(type === "active")
+      {
+        return tasks.filter((t) => !t.done);
+      }
+  else if (type === "done"){
+        return tasks.filter((t) => t.done);
+  }
   return tasks;
 }
 
 function updateCounter() {
-  counter.textContent = "Активных задач: " + tasks.length;
+  counter.textContent = "Активных задач: " + tasks.filter((t)=>!t.done).length;
 }
 
 function render() {
-  const visible = getVisibleTasks();
-  for (let i = 1; i <= visible.length; i++) {
+  const visible = getVisibleTasks(currentFilter);
+  list.replaceChildren();
+  for (let i = 0; i < visible.length; i++) {
     const task = visible[i];
     const li = document.createElement("li");
     li.className = "task";
@@ -56,6 +72,10 @@ function render() {
     span.className = "task__text";
     span.textContent = task.text;
     span.addEventListener("click", () => toggleTask(task.id));
+
+    if (task.done) {
+      span.style.textDecoration = "line-through";
+    }
 
     const del = document.createElement("button");
     del.className = "task__del";
